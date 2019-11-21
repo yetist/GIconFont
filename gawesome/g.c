@@ -1,67 +1,58 @@
-/* vi: set sw=4 ts=4 wrap ai expandtab: */
-/*
- * g-awesome.c: This file is part of ____
- *
- * Copyright (C) 2019 yetist <yetist@yetibook>
- *
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- * */
-
-
-enum {
-    PROP_0,
-    NUM_PROPERTIES
-};
-
-static GParamSpec *widget_props[NUM_PROPERTIES] = { NULL, };
-
 struct _GAwesome
 {
-    GObject            object;
-    FT_Library         library;
-    FT_Face            ft_face;
-    GBytes            *bytes;
+    GObject object;
+    FT_Library library;
+    FT_Face ft_face;
+    GBytes *bytes;
     cairo_font_face_t *font_face;
-    GHashTable        *hash_table;
+    GHashTable *hash_table;
 };
 
 typedef struct _GAwesomeNameIcon GAwesomeNameIcon;
 static GtkWidget* g_awesome_get_image_from_code (GAwesome *ga, GAwesomeCode code, GdkRGBA *rgba, GtkIconSize size);
 
-G_DEFINE_TYPE (GAwesome, g_awesome, G_TYPE_OBJECT);
-
-static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void g_awesome_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void g_awesome_init (GAwesome *self); static void g_awesome_class_init (GAwesomeClass *klass); static GType g_awesome_get_type_once (void); static gpointer g_awesome_parent_class = 
+# 50 "../gawesome/gawesome.c" 3 4
+((void *)0)
+# 50 "../gawesome/gawesome.c"
+; static gint GAwesome_private_offset; static void g_awesome_class_intern_init (gpointer klass) { g_awesome_parent_class = g_type_class_peek_parent (klass); if (GAwesome_private_offset != 0) g_type_class_adjust_private_offset (klass, &GAwesome_private_offset); g_awesome_class_init ((GAwesomeClass*) klass); } __attribute__((__unused__)) static inline gpointer g_awesome_get_instance_private (GAwesome *self) { return (((gpointer) ((guint8*) (self) + (glong) (GAwesome_private_offset)))); } GType g_awesome_get_type (void) { static volatile gsize g_define_type_id__volatile = 0; if ((__extension__ ({ _Static_assert (sizeof *(&g_define_type_id__volatile) == sizeof (gpointer), "Expression evaluates to false"); (void) (0 ? (gpointer) *(&g_define_type_id__volatile) : 0); (!(__extension__ ({ _Static_assert (sizeof *(&g_define_type_id__volatile) == sizeof (gpointer), "Expression evaluates to false"); guint64 gapg_temp = __atomic_load_8 ((&g_define_type_id__volatile), 5); (gpointer) gapg_temp; })) && g_once_init_enter (&g_define_type_id__volatile)); }))) { GType g_define_type_id = g_awesome_get_type_once (); (__extension__ ({ _Static_assert (sizeof *(&g_define_type_id__volatile) == sizeof (gpointer), "Expression evaluates to false"); (void) (0 ? *(&g_define_type_id__volatile) = (g_define_type_id) : 0); g_once_init_leave ((&g_define_type_id__volatile), (gsize) (g_define_type_id)); })); } return g_define_type_id__volatile; } __attribute__((noinline)) static GType g_awesome_get_type_once (void) { GType g_define_type_id = g_type_register_static_simple (((GType) ((20) << (2))), g_intern_static_string ("GAwesome"), sizeof (GAwesomeClass), (GClassInitFunc)(void (*)(void)) g_awesome_class_intern_init, sizeof (GAwesome), (GInstanceInitFunc)(void (*)(void)) g_awesome_init, (GTypeFlags) 0); { {{};} } return g_define_type_id; };
 
 static void g_awesome_finalize (GObject *object)
 {
-    debug_print ("hi");
+    do { g_printerr ("../gawesome/gawesome.c" ":" "54" ":" "hi" "\n"); } while (0);
     GAwesome *ga;
 
     ga = G_AWESOME (object);
 
-    if (ga->font_face != NULL)
+    if (ga->font_face != 
+# 59 "../gawesome/gawesome.c" 3 4
+                        ((void *)0)
+# 59 "../gawesome/gawesome.c"
+                            )
         cairo_font_face_destroy (ga->font_face);
-    if (ga->bytes != NULL)
+    if (ga->bytes != 
+# 61 "../gawesome/gawesome.c" 3 4
+                    ((void *)0)
+# 61 "../gawesome/gawesome.c"
+                        )
         g_bytes_unref (ga->bytes);
-    if (ga->ft_face != NULL)
+    if (ga->ft_face != 
+# 63 "../gawesome/gawesome.c" 3 4
+                      ((void *)0)
+# 63 "../gawesome/gawesome.c"
+                          )
         FT_Done_Face (ga->ft_face);
-    if (ga->library != NULL)
+    if (ga->library != 
+# 65 "../gawesome/gawesome.c" 3 4
+                      ((void *)0)
+# 65 "../gawesome/gawesome.c"
+                          )
         FT_Done_FreeType(ga->library);
-    if (ga->hash_table != NULL)
+    if (ga->hash_table != 
+# 67 "../gawesome/gawesome.c" 3 4
+                         ((void *)0)
+# 67 "../gawesome/gawesome.c"
+                             )
         g_hash_table_destroy(ga->hash_table);
 
     ((((GObjectClass*) g_type_check_class_cast ((GTypeClass*) ((g_awesome_parent_class)), (((GType) ((20) << (2))))))))->finalize (object);
@@ -69,21 +60,22 @@ static void g_awesome_finalize (GObject *object)
 
 static void g_awesome_class_init (GAwesomeClass *class)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS (class);
-
+    do { g_printerr ("../gawesome/gawesome.c" ":" "75" ":" "hi" "\n"); } while (0);
+    GObjectClass *gobject_class = ((((GObjectClass*) g_type_check_class_cast ((GTypeClass*) ((class)), (((GType) ((20) << (2))))))));
     gobject_class->finalize = g_awesome_finalize;
-    gobject_class->set_property = g_awesome_set_property;
-    gobject_class->get_property = g_awesome_get_property;
 }
 
 gboolean freetype_face_new (GAwesome *ga, GError **error)
 {
-    debug_print ("hi");
+    do { g_printerr ("../gawesome/gawesome.c" ":" "82" ":" "hi" "\n"); } while (0);
     FT_Error status;
 
     GResource *resource;
     gsize size;
     gconstpointer buffer;
+
+
+
 
     status = FT_Init_FreeType (&ga->library);
     if (status != 0) {
@@ -92,7 +84,7 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
                      1,
                      "Error %d opening library.\n",
                      status);
-        return FALSE;
+        return (0);
     }
 
     resource = gawesome_get_resource();
@@ -100,8 +92,12 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
                                     "/cc/zhcn/gawesome/font.ttf",
                                      G_RESOURCE_LOOKUP_FLAGS_NONE,
                                      error);
-    if (*error != NULL) {
-        return FALSE;
+    if (*error != 
+# 107 "../gawesome/gawesome.c" 3 4
+                 ((void *)0)
+# 107 "../gawesome/gawesome.c"
+                     ) {
+        return (0);
     }
     buffer = g_bytes_get_data (ga->bytes, &size);
     status = FT_New_Memory_Face(ga->library,
@@ -116,20 +112,28 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
                      "Error %d opening built-in fonts %s.\n",
                      status,
                      "/cc/zhcn/gawesome/font.ttf");
-        return FALSE;
+        return (0);
     }
-    return TRUE;
+# 138 "../gawesome/gawesome.c"
+    return (!(0));
 }
 
 static void g_awesome_init (GAwesome *ga)
 {
-    debug_print ("hi");
-    gboolean result = FALSE;
-    GError *error = NULL;
+    do { g_printerr ("../gawesome/gawesome.c" ":" "143" ":" "hi" "\n"); } while (0);
+    gboolean result = (0);
+    GError *error = 
+# 145 "../gawesome/gawesome.c" 3 4
+                   ((void *)0)
+# 145 "../gawesome/gawesome.c"
+                       ;
     gint i;
 
-    if (ga->font_face == NULL)
-    {
+    if (ga->font_face == 
+# 148 "../gawesome/gawesome.c" 3 4
+                        ((void *)0)
+# 148 "../gawesome/gawesome.c"
+                            ) {
         g_print("ga->font_face is NULL\n");
     }
 
@@ -138,7 +142,11 @@ static void g_awesome_init (GAwesome *ga)
         g_print("%s\n", error->message);
     }
     ga->font_face = cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
-    ga->hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    ga->hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, 
+# 157 "../gawesome/gawesome.c" 3 4
+                                                                            ((void *)0)
+# 157 "../gawesome/gawesome.c"
+                                                                                );
 
     for (i = 0; i < sizeof(gaNameIconArray)/sizeof(GAwesomeNameIcon); i++) {
         g_hash_table_insert (ga->hash_table, strdup(gaNameIconArray[i].name),
@@ -148,37 +156,12 @@ static void g_awesome_init (GAwesome *ga)
 
 GAwesome* g_awesome_new (void)
 {
-    return g_object_new (G_TYPE_AWESOME, NULL);
-}
-
-static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
-{
-    GAwesome *awesome;
-
-    awesome = G_AWESOME (object);
-
-    switch (prop_id)
-    {
-
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-            break;
-    }
-}
-
-static void g_awesome_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-    GAwesome *awesome;
-
-    awesome = G_AWESOME (object);
-
-    switch (prop_id)
-    {
-
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-            break;
-    }
+    do { g_printerr ("../gawesome/gawesome.c" ":" "167" ":" "hi" "\n"); } while (0);
+    return g_object_new ((g_awesome_get_type ()), 
+# 168 "../gawesome/gawesome.c" 3 4
+                                        ((void *)0)
+# 168 "../gawesome/gawesome.c"
+                                            );
 }
 
 static gint gint_from_icon_size (GtkIconSize icon_size)
@@ -212,7 +195,7 @@ static GtkWidget* g_awesome_get_image_from_code (GAwesome *ga, GAwesomeCode code
     cairo_t *cr;
     cairo_surface_t *surface;
     cairo_text_extents_t extents;
-    gint size;
+ gint size;
     gchar text[7] = {0};
     GtkWidget *image;
     double x,y;
@@ -253,6 +236,6 @@ GtkWidget* g_awesome_get_image_at_size_rgba (GAwesome *ga, const gchar* name, Gt
     gpointer value;
 
     value = g_hash_table_lookup (ga->hash_table, name);
-    code = GPOINTER_TO_UINT (value);
+    code = ((guint) (gulong) (value));
     return g_awesome_get_image_from_code (ga, code, rgba, size);
 }
