@@ -1,0 +1,4 @@
+option('builtin_fonts',
+       type : 'boolean',
+       value : true,
+       description : 'Support for embedding ttf fonts to library')
