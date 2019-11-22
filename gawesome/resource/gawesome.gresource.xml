@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+	<gresource prefix="/cc/zhcn/gawesome">
+		<file compressed="true" alias="font.ttf">fontawesome-webfont.ttf</file>
+		<file compressed="true" alias="font.map">fontawesome-webfont.map</file>
+	</gresource>
+</gresources>
