@@ -20,6 +20,13 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  * */
 
+#include <cairo.h>
+#include <cairo-ft.h>
+#include <ft2build.h>
+#include "gawesome.h"
+#include "gawesome-priv.h"
+#include "gawesome-resource.h"
+#include "debug.h"
 
 enum {
     PROP_0,
@@ -64,7 +71,7 @@ static void g_awesome_finalize (GObject *object)
     if (ga->hash_table != NULL)
         g_hash_table_destroy(ga->hash_table);
 
-    ((((GObjectClass*) g_type_check_class_cast ((GTypeClass*) ((g_awesome_parent_class)), (((GType) ((20) << (2))))))))->finalize (object);
+	G_OBJECT_CLASS (g_awesome_parent_class)->finalize (object);
 }
 
 static void g_awesome_class_init (GAwesomeClass *class)
