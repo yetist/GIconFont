@@ -41,6 +41,7 @@ struct _GAwesome
     FT_Library         library;
     FT_Face            ft_face;
     GBytes            *bytes;
+    GKeyFile          *keyfile;
     cairo_font_face_t *font_face;
     GHashTable        *hash_table;
 };
@@ -102,6 +103,7 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
         return FALSE;
     }
 
+    /* load ttf font */
     resource = gawesome_get_resource();
     ga->bytes = g_resource_lookup_data (resource,
                                     "/cc/zhcn/gawesome/font.ttf",
@@ -110,6 +112,23 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
     if (*error != NULL) {
         return FALSE;
     }
+
+    /* load font code map */
+    GBytes *map_bytes;
+    map_bytes = g_resource_lookup_data (resource,
+            "/cc/zhcn/gawesome/font.map",
+            G_RESOURCE_LOOKUP_FLAGS_NONE,
+            error);
+    if (*error != NULL) {
+        return FALSE;
+    }
+    if (!g_key_file_load_from_bytes (ga->keyfile, map_bytes, G_KEY_FILE_NONE, &error))
+    {
+        if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+            g_warning ("Error loading key file: %s", error->message);
+        return FALSE;
+    }
+
     buffer = g_bytes_get_data (ga->bytes, &size);
     status = FT_New_Memory_Face(ga->library,
                                 buffer,
@@ -135,11 +154,7 @@ static void g_awesome_init (GAwesome *ga)
     GError *error = NULL;
     gint i;
 
-    if (ga->font_face == NULL)
-    {
-        g_print("ga->font_face is NULL\n");
-    }
-
+    ga->keyfile = g_key_file_new ();
     result = freetype_face_new(ga, &error);
     if (!result) {
         g_print("%s\n", error->message);
