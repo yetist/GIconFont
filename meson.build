@@ -47,7 +47,7 @@ configure_file(
 
 subdir('gawesome')
 subdir('example')
-subdir('data')
+#subdir('data')
 
 pkg = import('pkgconfig')
 pkg.generate(

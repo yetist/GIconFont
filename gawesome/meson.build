@@ -1,8 +1,9 @@
 gnome = import('gnome')
+
 if builtin_fonts
   gawesome_resources = gnome.compile_resources(
-    'gawesome-resource', 'gawesome.gresource.xml',
-    source_dir: '../data',
+    'gawesome-resource', 'resource/gawesome.gresource.xml',
+    source_dir: 'resource',
     c_name: 'gawesome'
   )
 endif
@@ -11,10 +12,11 @@ install_headers(
   'gawesome.h',
   subdir: 'gawesome',
 )
+
 if builtin_fonts
-  source_list = [ 'gawesome.c', gawesome_resources]
+  source_list = ['gawesome.c', gawesome_resources]
 else
-  source_list = [ 'gawesome.c']
+  source_list = ['gawesome.c']
 endif
 
 libgawesome = shared_library('gawesome',
@@ -22,3 +24,5 @@ libgawesome = shared_library('gawesome',
   dependencies : [freetype_dep, gtk_dep],
   install:true,
 )
+
+subdir('resource')
