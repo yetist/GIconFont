@@ -28,12 +28,12 @@
 #include "gawesome-resource.h"
 #include "debug.h"
 
-enum {
-    PROP_0,
-    NUM_PROPERTIES
-};
-
-static GParamSpec *widget_props[NUM_PROPERTIES] = { NULL, };
+//enum {
+//    PROP_0,
+//    NUM_PROPERTIES
+//};
+//
+//static GParamSpec *widget_props[NUM_PROPERTIES] = { NULL, };
 
 struct _GAwesome
 {
@@ -50,12 +50,11 @@ struct _GAwesome
 };
 
 typedef struct _GAwesomeNameIcon GAwesomeNameIcon;
-static GtkWidget* g_awesome_get_image_from_code (GAwesome *ga, GAwesomeCode code, GdkRGBA *rgba, GtkIconSize size);
 
 G_DEFINE_TYPE (GAwesome, g_awesome, G_TYPE_OBJECT);
 
-static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void g_awesome_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+//static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+//static void g_awesome_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
 static void g_awesome_finalize (GObject *object)
 {
@@ -83,8 +82,8 @@ static void g_awesome_class_init (GAwesomeClass *class)
     GObjectClass *gobject_class = G_OBJECT_CLASS (class);
 
     gobject_class->finalize = g_awesome_finalize;
-    gobject_class->set_property = g_awesome_set_property;
-    gobject_class->get_property = g_awesome_get_property;
+    //gobject_class->set_property = g_awesome_set_property;
+    //gobject_class->get_property = g_awesome_get_property;
 }
 
 gboolean freetype_face_new (GAwesome *ga, GError **error)
@@ -154,9 +153,9 @@ static void g_awesome_init (GAwesome *ga)
                              ((gpointer) (gulong) (gaNameIconArray[i].code)));
     }
 
-    ga->default_rgba.red = 1.0;
-    ga->default_rgba.green = 1.0;
-    ga->default_rgba.blue = 1.0;
+    ga->default_rgba.red = 0.1;
+    ga->default_rgba.green = 0.1;
+    ga->default_rgba.blue = 0.1;
     ga->default_rgba.alpha = 1.0;
     ga->default_size = GTK_ICON_SIZE_BUTTON;
 }
@@ -166,6 +165,7 @@ GAwesome* g_awesome_new (void)
     return g_object_new (G_TYPE_AWESOME, NULL);
 }
 
+#if 0
 static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     GAwesome *awesome;
@@ -195,6 +195,7 @@ static void g_awesome_get_property (GObject *object, guint prop_id, GValue *valu
             break;
     }
 }
+#endif
 
 static gint gint_from_icon_size (GtkIconSize icon_size)
 {
@@ -253,41 +254,6 @@ static GdkPixbuf* g_awesome_get_pixbuf_from_code (GAwesome *ga, GAwesomeCode cod
 
     return pixbuf;
 }
-
-#if 0
-static GtkWidget* g_awesome_get_image_from_code (GAwesome *ga, GAwesomeCode code, GdkRGBA *rgba, GtkIconSize icon_size)
-{
-    cairo_t *cr;
-    cairo_surface_t *surface;
-    cairo_text_extents_t extents;
-    gint size;
-    gchar text[7] = {0};
-    GtkWidget *image;
-    double x,y;
-
-    size = gint_from_icon_size (icon_size);
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, size, size);
-    cr = cairo_create (surface);
-
-    cairo_set_font_face (cr, ga->font_face);
-    cairo_set_font_size (cr, size);
-    cairo_set_source_rgba (cr, rgba->red, rgba->green, rgba->blue, rgba->alpha);
-
-    g_unichar_to_utf8 (code, text);
-    cairo_text_extents (cr, text, &extents);
-    x = (size - extents.width)/2 + extents.x_bearing;
-    y = (size - extents.height)/2 - extents.y_bearing;
-    cairo_move_to (cr, x, y);
-
-    cairo_show_text (cr, text);
-
-    image = gtk_image_new_from_surface (surface);
-    cairo_surface_destroy (surface);
-    cairo_destroy (cr);
-
-    return image;
-}
-#endif
 
 void g_awesome_set_default_rgba (GAwesome *ga, GdkRGBA *rgba)
 {

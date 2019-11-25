@@ -53,7 +53,8 @@ int main (int argc, char *argv[])
     ga = g_awesome_new();
 	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_fa_500px, &rgba, GTK_ICON_SIZE_DIALOG);
 	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_apple, &rgba, GTK_ICON_SIZE_DIALOG);
-	image = g_awesome_get_image_at_size_rgba (ga, "apple", GTK_ICON_SIZE_DIALOG, &rgba);
+	//image = g_awesome_get_image_at_size_rgba (ga, "apple", GTK_ICON_SIZE_DIALOG, &rgba);
+	image = g_awesome_get_image (ga, "apple");
     gtk_button_set_image (GTK_BUTTON(button), image);
 	gtk_container_add (GTK_CONTAINER (window), button);
 	gtk_widget_show_all (window);
