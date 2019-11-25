@@ -44,6 +44,9 @@ struct _GAwesome
     GKeyFile          *keyfile;
     cairo_font_face_t *font_face;
     GHashTable        *hash_table;
+
+	GdkRGBA            default_rgba;
+	GtkIconSize        default_size;
 };
 
 typedef struct _GAwesomeNameIcon GAwesomeNameIcon;
@@ -113,22 +116,6 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
         return FALSE;
     }
 
-    /* load font code map */
-    GBytes *map_bytes;
-    map_bytes = g_resource_lookup_data (resource,
-            "/cc/zhcn/gawesome/font.map",
-            G_RESOURCE_LOOKUP_FLAGS_NONE,
-            error);
-    if (*error != NULL) {
-        return FALSE;
-    }
-    if (!g_key_file_load_from_bytes (ga->keyfile, map_bytes, G_KEY_FILE_NONE, &error))
-    {
-        if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_warning ("Error loading key file: %s", error->message);
-        return FALSE;
-    }
-
     buffer = g_bytes_get_data (ga->bytes, &size);
     status = FT_New_Memory_Face(ga->library,
                                 buffer,
@@ -166,6 +153,12 @@ static void g_awesome_init (GAwesome *ga)
         g_hash_table_insert (ga->hash_table, strdup(gaNameIconArray[i].name),
                              ((gpointer) (gulong) (gaNameIconArray[i].code)));
     }
+
+    ga->default_rgba.red = 1.0;
+    ga->default_rgba.green = 1.0;
+    ga->default_rgba.blue = 1.0;
+    ga->default_rgba.alpha = 1.0;
+    ga->default_size = GTK_ICON_SIZE_BUTTON;
 }
 
 GAwesome* g_awesome_new (void)
@@ -229,6 +222,39 @@ static gint gint_from_icon_size (GtkIconSize icon_size)
     return size;
 }
 
+static GdkPixbuf* g_awesome_get_pixbuf_from_code (GAwesome *ga, GAwesomeCode code, GdkRGBA *rgba, gint size)
+{
+    cairo_t *cr;
+    cairo_surface_t *surface;
+    cairo_text_extents_t extents;
+    gchar text[7] = {0};
+    GdkPixbuf *pixbuf;
+    double x,y;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, size, size);
+    cr = cairo_create (surface);
+
+    cairo_set_font_face (cr, ga->font_face);
+    cairo_set_font_size (cr, size);
+    cairo_set_source_rgba (cr, rgba->red, rgba->green, rgba->blue, rgba->alpha);
+
+    g_unichar_to_utf8 (code, text);
+    cairo_text_extents (cr, text, &extents);
+    x = (size - extents.width)/2 + extents.x_bearing;
+    y = (size - extents.height)/2 - extents.y_bearing;
+    cairo_move_to (cr, x, y);
+
+    cairo_show_text (cr, text);
+
+    pixbuf = gdk_pixbuf_get_from_surface (surface, 0, 0, size, size);
+
+    cairo_surface_destroy (surface);
+    cairo_destroy (cr);
+
+    return pixbuf;
+}
+
+#if 0
 static GtkWidget* g_awesome_get_image_from_code (GAwesome *ga, GAwesomeCode code, GdkRGBA *rgba, GtkIconSize icon_size)
 {
     cairo_t *cr;
@@ -261,20 +287,62 @@ static GtkWidget* g_awesome_get_image_from_code (GAwesome *ga, GAwesomeCode code
 
     return image;
 }
+#endif
 
-GdkPixbuf* g_awesome_get_pixbuf (GAwesome *ga, const gchar* name);
-GdkPixbuf* g_awesome_get_pixbuf_at_size (GAwesome *ga, const gchar* name, GtkIconSize size);
-GdkPixbuf* g_awesome_get_pixbuf_at_size_rgba (GAwesome *ga, const gchar* name, GtkIconSize size, GdkRGBA *rgba);
+void g_awesome_set_default_rgba (GAwesome *ga, GdkRGBA *rgba)
+{
+    ga->default_rgba.red = rgba->red;
+    ga->default_rgba.green = rgba->green;
+    ga->default_rgba.blue = rgba->blue;
+    ga->default_rgba.alpha = rgba->alpha;
+}
 
-GtkWidget* g_awesome_get_image (GAwesome *ga, const gchar* name);
-GtkWidget* g_awesome_get_image_at_size (GAwesome *ga, const gchar* name, GtkIconSize size);
+void g_awesome_set_default_size (GAwesome *ga, GtkIconSize size)
+{
+    ga->default_size = size;
+}
+
+GdkPixbuf* g_awesome_get_pixbuf (GAwesome *ga, const gchar* name)
+{
+    return g_awesome_get_pixbuf_at_size (ga, name, ga->default_size);
+}
+
+GdkPixbuf* g_awesome_get_pixbuf_at_size (GAwesome *ga, const gchar* name, GtkIconSize size)
+{
+    return g_awesome_get_pixbuf_at_size_rgba (ga, name, size,  &ga->default_rgba);
+}
+
+GdkPixbuf* g_awesome_get_pixbuf_at_size_rgba (GAwesome *ga, const gchar* name, GtkIconSize icon_size, GdkRGBA *rgba)
+{
+    GdkPixbuf* pixbuf;
+    gpointer code;
+    gint size;
+
+    code = g_hash_table_lookup (ga->hash_table, name);
+    size = gint_from_icon_size (icon_size);
+
+    pixbuf = g_awesome_get_pixbuf_from_code (ga, GPOINTER_TO_UINT (code), rgba, size);
+    return pixbuf;
+}
+
+GtkWidget* g_awesome_get_image (GAwesome *ga, const gchar* name)
+{
+    return g_awesome_get_image_at_size_rgba (ga, name, ga->default_size, &ga->default_rgba);
+}
+
+GtkWidget* g_awesome_get_image_at_size (GAwesome *ga, const gchar* name, GtkIconSize size)
+{
+    return g_awesome_get_image_at_size_rgba (ga, name, size, &ga->default_rgba);
+}
 
 GtkWidget* g_awesome_get_image_at_size_rgba (GAwesome *ga, const gchar* name, GtkIconSize size, GdkRGBA *rgba)
 {
-    GAwesomeCode code;
-    gpointer value;
+    GdkPixbuf* pixbuf;
+    GtkWidget *image;
 
-    value = g_hash_table_lookup (ga->hash_table, name);
-    code = GPOINTER_TO_UINT (value);
-    return g_awesome_get_image_from_code (ga, code, rgba, size);
+    pixbuf = g_awesome_get_pixbuf_at_size_rgba (ga, name, size, rgba);
+    image = gtk_image_new_from_pixbuf (pixbuf);
+    g_object_unref (pixbuf);
+
+    return image;
 }

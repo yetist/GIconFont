@@ -57,4 +57,22 @@ int main()
     g_print("%u\n", id);
 
     return 0;
+
+#if 0
+    /* load font code map */
+    GBytes *map_bytes;
+    map_bytes = g_resource_lookup_data (resource,
+            "/cc/zhcn/gawesome/font.map",
+            G_RESOURCE_LOOKUP_FLAGS_NONE,
+            error);
+    if (*error != NULL) {
+        return FALSE;
+    }
+    if (!g_key_file_load_from_bytes (ga->keyfile, map_bytes, G_KEY_FILE_NONE, &error))
+    {
+        if (!g_error_matches (*error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
+            g_warning ("Error loading key file: %s", *error->message);
+        return FALSE;
+    }
+#endif
 }
