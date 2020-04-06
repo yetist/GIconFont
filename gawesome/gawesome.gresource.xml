@@ -2,5 +2,6 @@
 <gresources>
 	<gresource prefix="/cc/zhcn/gawesome">
 		<file compressed="true" alias="font.ttf">../data/fontawesome-4.7.0.ttf</file>
+		<file alias="font.map">../data/fontawesome-4.7.0.ttf</file>
 	</gresource>
 </gresources>

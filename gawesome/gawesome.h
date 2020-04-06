@@ -32,8 +32,8 @@ G_DECLARE_FINAL_TYPE (GAwesome, g_awesome, G, AWESOME, GObject)
 
 GAwesome*  g_awesome_new                     (void);
 
-void       g_awesome_set_default_rgba        (GAwesome *ga, GdkRGBA *rgba);
-void       g_awesome_set_default_size        (GAwesome *ga, GtkIconSize size);
+void       g_awesome_set_rgba                (GAwesome *ga, GdkRGBA *rgba);
+void       g_awesome_set_size                (GAwesome *ga, GtkIconSize size);
 
 GdkPixbuf* g_awesome_get_pixbuf              (GAwesome *ga, const gchar* name);
 GdkPixbuf* g_awesome_get_pixbuf_at_size      (GAwesome *ga, const gchar* name, GtkIconSize size);
@@ -43,6 +43,7 @@ GtkWidget* g_awesome_get_image               (GAwesome *ga, const gchar* name);
 GtkWidget* g_awesome_get_image_at_size       (GAwesome *ga, const gchar* name, GtkIconSize size);
 GtkWidget* g_awesome_get_image_at_size_rgba  (GAwesome *ga, const gchar* name, GtkIconSize size, GdkRGBA *rgba);
 
+GtkWidget* g_awesome_get_image_from_name     (GAwesome *ga, const gchar* name, GdkRGBA *rgba, GtkIconSize size);
 G_END_DECLS
 
 #endif /* __G_AWESOME_H__ */

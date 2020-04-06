@@ -51,6 +51,9 @@ int main (int argc, char *argv[])
     rgba.blue = 0.5;
     rgba.alpha = 1.0;
     ga = g_awesome_new();
+    g_awesome_set_rgba(ga, &rgba);
+    g_awesome_set_size(ga, GTK_ICON_SIZE_MENU);
+	image = g_awesome_get_image (ga, "twitter");
 	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_fa_500px, &rgba, GTK_ICON_SIZE_DIALOG);
 	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_apple, &rgba, GTK_ICON_SIZE_DIALOG);
 	//image = g_awesome_get_image_at_size_rgba (ga, "apple", GTK_ICON_SIZE_DIALOG, &rgba);
