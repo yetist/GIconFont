@@ -1,8 +1,6 @@
 /* vi: set sw=4 ts=4 wrap ai: */
 /*
- * g-awesome.h: This file is part of ____
- *
- * Copyright (C) 2019 yetist <yetist@yetibook>
+ * Copyright (C) 2019 Wu Xiaotian <yetist@gmail.com>
  *
  *
  * This program is free software; you can redistribute it and/or modify

@@ -1,8 +1,6 @@
 /* vi: set sw=4 ts=4 wrap ai expandtab: */
 /*
- * g-awesome.c: This file is part of ____
- *
- * Copyright (C) 2019 yetist <yetist@yetibook>
+ * Copyright (C) 2019 Wu Xiaotian <yetist@gmail.com>
  *
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,7 +23,6 @@
 #include <ft2build.h>
 #include "gawesome.h"
 #include "gawesome-resource.h"
-#include "debug.h"
 
 enum {
     PROP_0,
@@ -45,8 +42,8 @@ struct _GAwesome
 
     FT_Library         library;
     FT_Face            ft_face;
-    GBytes            *bytes;
-    GKeyFile          *keyfile;
+    GBytes *bytes;
+    GHashTable        *hash_table;
     cairo_font_face_t *font_face;
 
 };
@@ -60,19 +57,20 @@ static void g_awesome_get_property (GObject *object, guint prop_id, GValue *valu
 
 static void g_awesome_finalize (GObject *object)
 {
-    debug_print ("hi");
     GAwesome *ga;
 
     ga = G_AWESOME (object);
 
     if (ga->font_face != NULL)
         cairo_font_face_destroy (ga->font_face);
-    if (ga->bytes != NULL)
-        g_bytes_unref (ga->bytes);
     if (ga->ft_face != NULL)
         FT_Done_Face (ga->ft_face);
     if (ga->library != NULL)
         FT_Done_FreeType(ga->library);
+    if (ga->bytes!= NULL)
+        g_bytes_unref(ga->bytes);
+    if (ga->hash_table != NULL)
+        g_hash_table_destroy(ga->hash_table);
 
 	G_OBJECT_CLASS (g_awesome_parent_class)->finalize (object);
 }
@@ -85,66 +83,44 @@ static void g_awesome_class_init (GAwesomeClass *class)
     gobject_class->set_property = g_awesome_set_property;
     gobject_class->get_property = g_awesome_get_property;
 
-    widget_props[PROP_ICON_RGBA] =
-        g_param_spec_boxed ("icon-rgba",
-                "Default icon RGBA",
-                "Default icon color as a GdkRGBA",
-                GDK_TYPE_RGBA,
-                G_PARAM_READWRITE);
-    widget_props[PROP_ICON_SIZE] =
-        g_param_spec_enum ("icon-size",
-                "Default icon size",
-                "The GtkIconSize value that specifies the size of the rendered icon",
-                GTK_TYPE_ICON_SIZE,
-                GTK_ICON_SIZE_MENU,
-                G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+    widget_props[PROP_ICON_RGBA] = g_param_spec_boxed ("icon-rgba",
+                                                       "Default icon RGBA",
+                                                       "Default icon color as a GdkRGBA",
+                                                       GDK_TYPE_RGBA,
+                                                       G_PARAM_READWRITE);
+    widget_props[PROP_ICON_SIZE] = g_param_spec_enum ("icon-size",
+                                                      "Default icon size",
+                                                      "The GtkIconSize value that specifies the size of the rendered icon",
+                                                      GTK_TYPE_ICON_SIZE,
+                                                      GTK_ICON_SIZE_MENU,
+                                                      G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
 
     g_object_class_install_properties (gobject_class, NUM_PROPERTIES, widget_props);
 }
 
-gboolean freetype_face_new (GAwesome *ga, GError **error)
+cairo_font_face_t *load_icon_font (GAwesome *ga)
 {
-    debug_print ("hi");
     FT_Error status;
-
     GResource *resource;
     gsize size;
     gconstpointer buffer;
+    g_autoptr(GError) error = NULL;
 
     status = FT_Init_FreeType (&ga->library);
     if (status != 0) {
-        g_set_error (error,
-                     g_quark_from_string ("gawesome"),
-                     1,
-                     "Error %d opening library.\n",
-                     status);
-        return FALSE;
+        g_warning ("Error %d opening library.\n", status);
+        return NULL;
     }
 
     /* load ttf font */
     resource = gawesome_get_resource();
     ga->bytes = g_resource_lookup_data (resource,
-                                    "/cc/zhcn/gawesome/font.ttf",
-                                     G_RESOURCE_LOOKUP_FLAGS_NONE,
-                                     error);
-    if (*error != NULL) {
-        return FALSE;
-    }
-
-    /* load font code map */
-    GBytes *map_bytes;
-    map_bytes = g_resource_lookup_data (resource,
-            "/cc/zhcn/gawesome/font.map",
-            G_RESOURCE_LOOKUP_FLAGS_NONE,
-            error);
-    if (*error != NULL) {
-        return FALSE;
-    }
-    if (!g_key_file_load_from_bytes (ga->keyfile, map_bytes, G_KEY_FILE_NONE, error))
-    {
-        if (g_error_matches (*error, G_FILE_ERROR, G_FILE_ERROR_NOENT))
-            g_warning ("Error loading key file: %s", (*error)->message);
-        return FALSE;
+                                        "/cc/zhcn/gawesome/font.ttf",
+                                        G_RESOURCE_LOOKUP_FLAGS_NONE,
+                                        &error);
+    if (error != NULL) {
+        g_warning ("Error loading resource: %s.\n", error->message);
+        return NULL;
     }
 
     buffer = g_bytes_get_data (ga->bytes, &size);
@@ -154,33 +130,70 @@ gboolean freetype_face_new (GAwesome *ga, GError **error)
                                 0,
                                 &ga->ft_face);
     if (status != 0) {
-        g_set_error (error,
-                     g_quark_from_string ("gawesome"),
-                     2,
-                     "Error %d opening built-in fonts %s.\n",
-                     status,
-                     "/cc/zhcn/gawesome/font.ttf");
-        return FALSE;
+        g_warning ("Error %d opening built-in fonts %s.\n", status, "/cc/zhcn/gawesome/font.ttf");
+        return NULL;
+    }
+    return cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
+}
+
+GHashTable* load_icon_code(GAwesome *ga)
+{
+    GResource  *resource;
+    GHashTable *hash_table;
+    gsize length;
+    gint i;
+
+    g_autoptr(GError) error = NULL;
+    g_autoptr(GKeyFile) keyfile = g_key_file_new ();
+
+    resource = gawesome_get_resource();
+
+    /* load font code map */
+    g_autoptr(GBytes) bytes = g_resource_lookup_data (resource,
+                                                      "/cc/zhcn/gawesome/font.map",
+                                                      G_RESOURCE_LOOKUP_FLAGS_NONE,
+                                                      &error);
+    if (error != NULL) {
+        return NULL;
+    }
+    if (!g_key_file_load_from_bytes (keyfile, bytes, G_KEY_FILE_NONE, &error)) {
+        if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+            g_warning ("Error loading key file: %s", error->message);
+        }
+        return NULL;
     }
 
-    return TRUE;
+    g_auto(GStrv) keys = g_key_file_get_keys (keyfile,
+                                              ga->ft_face->family_name,
+                                              &length,
+                                              &error);
+    if (keys == NULL) {
+        g_warning ("Error get keys: %s", error->message);
+        return NULL;
+    }
+    hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+    for (i = 0; i < length; i++) {
+        gchar *val;
+        val = g_key_file_get_value(keyfile, ga->ft_face->family_name, keys[i], NULL);
+        if (val != NULL) {
+            guint32 code;
+            code = g_ascii_strtoull (val, NULL, 16);
+            if (code != 0) {
+                g_hash_table_insert (hash_table, g_strdup(keys[i]), GUINT_TO_POINTER(code));
+            }
+        }
+    }
+    return hash_table;
 }
 
 static void g_awesome_init (GAwesome *ga)
 {
-    debug_print ("hi");
-    gboolean result = FALSE;
-    GError *error = NULL;
-
     ga->icon_size = GTK_ICON_SIZE_BUTTON;
     gdk_rgba_parse (ga->icon_rgba, "rgba(0,0,0,0)");
     ga->icon_rgba_set = FALSE;
-    ga->keyfile = g_key_file_new ();
-    result = freetype_face_new(ga, &error);
-    if (!result) {
-        g_print("%s\n", error->message);
-    }
-    ga->font_face = cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
+    ga->font_face = load_icon_font(ga);
+    ga->hash_table = load_icon_code(ga);
 }
 
 GAwesome* g_awesome_new (void)
@@ -292,6 +305,9 @@ static GdkPixbuf* g_awesome_get_pixbuf_from_code (GAwesome *ga, gunichar code, g
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, size, size);
     cr = cairo_create (surface);
+    if (ga->font_face == NULL) {
+        return NULL;
+    }
 
     cairo_set_font_face (cr, ga->font_face);
     cairo_set_font_size (cr, size);
@@ -323,35 +339,15 @@ GdkPixbuf* g_awesome_get_pixbuf_at_size (GAwesome *ga, const gchar* name, GtkIco
     return g_awesome_get_pixbuf_at_size_rgba (ga, name, size, ga->icon_rgba);
 }
 
-guint32 g_awesome_get_icon_code (GAwesome *ga, const gchar* name)
-{
-    gchar *val;
-    guint32 code;
-
-    val = g_key_file_get_value(ga->keyfile, ga->ft_face->family_name, name, NULL);
-    if (val == NULL) {
-        return -1;
-    }
-    code = g_ascii_strtoull (val, NULL, 16);
-    if (code == 0) {
-        return -1;
-    }
-    return code;
-}
-
 GdkPixbuf* g_awesome_get_pixbuf_at_size_rgba (GAwesome *ga, const gchar* name, GtkIconSize icon_size, GdkRGBA *rgba)
 {
-    GdkPixbuf* pixbuf;
     gint size;
-    guint32 code;
-
-    code = g_awesome_get_icon_code (ga, name);
-    if (code < 0) {
-        return NULL;
-    }
+    gpointer code;
+    GdkPixbuf* pixbuf;
 
     size = gint_from_icon_size (icon_size);
-    pixbuf = g_awesome_get_pixbuf_from_code (ga, code, size, rgba);
+    code = g_hash_table_lookup (ga->hash_table, name);
+    pixbuf = g_awesome_get_pixbuf_from_code (ga, GPOINTER_TO_UINT(code), size, rgba);
 
     return pixbuf;
 }
