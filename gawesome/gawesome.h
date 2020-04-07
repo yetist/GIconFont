@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GAwesome, g_awesome, G, AWESOME, GObject)
 
 GAwesome*  g_awesome_new                     (void);
-
+GAwesome*  g_awesome_new_with_font           (const gchar* font, const gchar *map);
 void       g_awesome_set_rgba                (GAwesome *ga, GdkRGBA *rgba);
 void       g_awesome_set_size                (GAwesome *ga, GtkIconSize size);
 

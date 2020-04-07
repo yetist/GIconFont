@@ -28,6 +28,8 @@ enum {
     PROP_0,
     PROP_ICON_RGBA,
     PROP_ICON_SIZE,
+    PROP_FONT_PATH,
+    PROP_MAP_PATH,
     NUM_PROPERTIES
 };
 
@@ -42,9 +44,11 @@ struct _GAwesome
 
     FT_Library         library;
     FT_Face            ft_face;
-    GBytes *bytes;
+    GBytes            *bytes;
     GHashTable        *hash_table;
     cairo_font_face_t *font_face;
+    gchar             *font;
+    gchar             *map;
 
 };
 
@@ -94,6 +98,16 @@ static void g_awesome_class_init (GAwesomeClass *class)
                                                       GTK_TYPE_ICON_SIZE,
                                                       GTK_ICON_SIZE_MENU,
                                                       G_PARAM_READWRITE | G_PARAM_EXPLICIT_NOTIFY);
+    widget_props[PROP_FONT_PATH] = g_param_spec_string ("font-path",
+                                                        "Default icon RGBA",
+                                                        "Default icon color as a GdkRGBA",
+                                                        GDK_TYPE_RGBA,
+                                                        G_PARAM_READWRITE);
+    widget_props[PROP_MAP_PATH] = g_param_spec_string ("map-path",
+                                                       "Default icon RGBA",
+                                                       "Default icon color as a GdkRGBA",
+                                                       GDK_TYPE_RGBA,
+                                                       G_PARAM_READWRITE);
 
     g_object_class_install_properties (gobject_class, NUM_PROPERTIES, widget_props);
 }
@@ -133,10 +147,11 @@ cairo_font_face_t *load_icon_font (GAwesome *ga)
         g_warning ("Error %d opening built-in fonts %s.\n", status, "/cc/zhcn/gawesome/font.ttf");
         return NULL;
     }
+    //GHashTable* load_icon_code(GAwesome *ga, const gchar* family_name)
     return cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
 }
 
-GHashTable* load_icon_code(GAwesome *ga)
+GHashTable* load_icon_code(GAwesome *ga, const gchar* family_name)
 {
     GResource  *resource;
     GHashTable *hash_table;
@@ -164,7 +179,7 @@ GHashTable* load_icon_code(GAwesome *ga)
     }
 
     g_auto(GStrv) keys = g_key_file_get_keys (keyfile,
-                                              ga->ft_face->family_name,
+                                              family_name,
                                               &length,
                                               &error);
     if (keys == NULL) {
@@ -175,7 +190,7 @@ GHashTable* load_icon_code(GAwesome *ga)
 
     for (i = 0; i < length; i++) {
         gchar *val;
-        val = g_key_file_get_value(keyfile, ga->ft_face->family_name, keys[i], NULL);
+        val = g_key_file_get_value(keyfile, family_name, keys[i], NULL);
         if (val != NULL) {
             guint32 code;
             code = g_ascii_strtoull (val, NULL, 16);
@@ -194,9 +209,16 @@ static void g_awesome_init (GAwesome *ga)
     ga->icon_rgba_set = FALSE;
     ga->font_face = load_icon_font(ga);
     ga->hash_table = load_icon_code(ga);
+    ga->font = NULL;
+    ga->map = NULL;
 }
 
 GAwesome* g_awesome_new (void)
+{
+    return g_object_new (G_TYPE_AWESOME, NULL);
+}
+
+GAwesome* g_awesome_new_with_font (const gchar* font, const gchar *map)
 {
     return g_object_new (G_TYPE_AWESOME, NULL);
 }
@@ -228,6 +250,44 @@ void g_awesome_set_rgba (GAwesome *ga, GdkRGBA *rgba)
     }
 }
 
+void g_awesome_set_font (GAwesome *ga, gchar* font)
+{
+
+    FT_Error status;
+    GResource *resource;
+    gsize size;
+    gconstpointer buffer;
+    g_autoptr(GError) error = NULL;
+
+    /* load ttf font */
+    gboolean ret;
+    gchar *contents;
+                     gsize length;
+    ret = g_file_get_contents (font,
+            &buffer,
+            &size,
+            &error);
+
+    if (ret) {
+    }
+
+    buffer = g_bytes_get_data (ga->bytes, &size);
+    status = FT_New_Memory_Face(ga->library,
+                                buffer,
+                                size,
+                                0,
+                                &ga->ft_face);
+    if (status != 0) {
+        g_warning ("Error %d opening built-in fonts %s.\n", status, "/cc/zhcn/gawesome/font.ttf");
+        return NULL;
+    }
+    return cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
+}
+
+void g_awesome_set_map (GAwesome *ga, gchar* map)
+{
+}
+
 static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     GAwesome *awesome;
@@ -241,6 +301,12 @@ static void g_awesome_set_property (GObject *object, guint prop_id, const GValue
             break;
         case PROP_ICON_SIZE:
             g_awesome_set_size (awesome, g_value_get_enum (value));
+            break;
+        case PROP_FONT_PATH:
+            g_awesome_set_font (awesome, g_value_get_string (value));
+            break;
+        case PROP_MAP_PATH:
+            g_awesome_set_map (awesome, g_value_get_string (value));
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -261,6 +327,12 @@ static void g_awesome_get_property (GObject *object, guint prop_id, GValue *valu
             break;
         case PROP_ICON_SIZE:
             g_value_set_enum (value, awesome->icon_size);
+            break;
+        case PROP_FONT_PATH:
+            g_value_set_string (value, awesome->font);
+            break;
+        case PROP_MAP_PATH:
+            g_value_set_string (value, awesome->map);
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
