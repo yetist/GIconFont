@@ -1,3 +1,4 @@
+# vim: set ft=dosini:
 [FontAwesome]
 500px = 0xf26e
 address-book = 0xf2b9
