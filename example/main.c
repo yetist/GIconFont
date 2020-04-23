@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
     rgba.alpha = 1.0;
     ga = g_awesome_new();
     g_awesome_set_rgba(ga, &rgba);
-    g_awesome_set_size(ga, GTK_ICON_SIZE_MENU);
+    g_awesome_set_size(ga, GTK_ICON_SIZE_DIALOG);
 	image = g_awesome_get_image (ga, "twitter");
 	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_fa_500px, &rgba, GTK_ICON_SIZE_DIALOG);
 	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_apple, &rgba, GTK_ICON_SIZE_DIALOG);

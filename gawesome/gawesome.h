@@ -42,6 +42,7 @@ GtkWidget* g_awesome_get_image_at_size       (GAwesome *ga, const gchar* name, G
 GtkWidget* g_awesome_get_image_at_size_rgba  (GAwesome *ga, const gchar* name, GtkIconSize size, GdkRGBA *rgba);
 
 GtkWidget* g_awesome_get_image_from_name     (GAwesome *ga, const gchar* name, GdkRGBA *rgba, GtkIconSize size);
+
 G_END_DECLS
 
 #endif /* __G_AWESOME_H__ */
