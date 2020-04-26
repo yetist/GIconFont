@@ -118,8 +118,10 @@ static void g_awesome_init (GAwesome *ga)
     ga->map = NULL;
     gdk_rgba_parse (ga->icon_rgba, "rgba(0,0,0,0)");
     ga->hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+#if BUILT_IN_FONTS
     g_awesome_set_font (ga, "resource://cc/zhcn/gawesome/font.ttf");
     g_awesome_set_code (ga, "resource://cc/zhcn/gawesome/font.map");
+#endif
 }
 
 GAwesome* g_awesome_new (void)
@@ -410,7 +412,8 @@ GtkWidget* g_awesome_get_image_at_size_rgba (GAwesome *ga, const gchar* name, Gt
 
     pixbuf = g_awesome_get_pixbuf_at_size_rgba (ga, name, size, rgba);
     image = gtk_image_new_from_pixbuf (pixbuf);
-    g_object_unref (pixbuf);
+    if (pixbuf)
+        g_object_unref (pixbuf);
 
     return image;
 }
