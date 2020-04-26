@@ -1,5 +1,5 @@
 project('gawesome', 'c',
-version : '0.0.1',
+version : '0.1.0',
 license : 'LGPLv2.1+',
 default_options : [
 	'warning_level=1',
@@ -47,7 +47,6 @@ configure_file(
 
 subdir('gawesome')
 subdir('example')
-#subdir('data')
 
 pkg = import('pkgconfig')
 pkg.generate(
