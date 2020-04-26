@@ -77,7 +77,7 @@ static void activate (GtkApplication* app, gpointer user_data)
 
     /* Test font from uri or path */
     g_awesome_set_font (ga, "https://at.alicdn.com/t/font_115436_p8ay96nf93g.ttf");
-    g_awesome_set_code (ga, "./example/code.map");
+    g_awesome_set_code (ga, "https://github.com/yetist/gawesome/raw/master/example/code.map");
     gdk_rgba_parse (&rgba, "red");
     g_awesome_set_rgba(ga, &rgba);
     g_awesome_set_size (ga, GTK_ICON_SIZE_MENU);
