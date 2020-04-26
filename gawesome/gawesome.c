@@ -21,8 +21,12 @@
 #include <cairo.h>
 #include <cairo-ft.h>
 #include <ft2build.h>
+#include "config.h"
 #include "gawesome.h"
+
+#if BUILT_IN_FONTS
 #include "gawesome-resource.h"
+#endif
 
 enum {
     PROP_0,
