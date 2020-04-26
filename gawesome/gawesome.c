@@ -40,7 +40,6 @@ struct _GAwesome
     GObject            object;
     GdkRGBA           *icon_rgba;
     GtkIconSize        icon_size;
-    gboolean           icon_rgba_set;
 
     FT_Library         library;
     FT_Face            ft_face;
@@ -112,119 +111,15 @@ static void g_awesome_class_init (GAwesomeClass *class)
     g_object_class_install_properties (gobject_class, NUM_PROPERTIES, widget_props);
 }
 
-cairo_font_face_t *load_icon_font (GAwesome *ga)
-{
-    FT_Error status;
-    GResource *resource;
-    gsize size;
-    gconstpointer buffer;
-    g_autoptr(GError) error = NULL;
-
-    status = FT_Init_FreeType (&ga->library);
-    if (status != 0) {
-        g_warning ("Error %d opening library.\n", status);
-        return NULL;
-    }
-
-    /* load ttf font */
-    resource = gawesome_get_resource();
-    ga->bytes = g_resource_lookup_data (resource,
-                                        "/cc/zhcn/gawesome/font.ttf",
-                                        G_RESOURCE_LOOKUP_FLAGS_NONE,
-                                        &error);
-    if (error != NULL) {
-        g_warning ("Error loading resource: %s.\n", error->message);
-        return NULL;
-    }
-
-    buffer = g_bytes_get_data (ga->bytes, &size);
-    status = FT_New_Memory_Face(ga->library,
-                                buffer,
-                                size,
-                                0,
-                                &ga->ft_face);
-    if (status != 0) {
-        g_warning ("Error %d opening built-in fonts %s.\n", status, "/cc/zhcn/gawesome/font.ttf");
-        return NULL;
-    }
-    return cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
-}
-
-static GKeyFile* key_file_from_resource (void)
-{
-    GResource  *resource;
-    g_autoptr(GError) error = NULL;
-
-    GKeyFile* keyfile = g_key_file_new ();
-
-    resource = gawesome_get_resource();
-
-    /* load font code map */
-    g_autoptr(GBytes) bytes = g_resource_lookup_data (resource,
-                                                      "/cc/zhcn/gawesome/font.map",
-                                                      G_RESOURCE_LOOKUP_FLAGS_NONE,
-                                                      &error);
-    if (error != NULL) {
-        return NULL;
-    }
-
-    if (!g_key_file_load_from_bytes (keyfile, bytes, G_KEY_FILE_NONE, &error)) {
-        if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-            g_warning ("Error loading key file: %s", error->message);
-        }
-        return NULL;
-    }
-    return keyfile;
-}
-
-static GHashTable* hash_from_key_file (GKeyFile *keyfile, const gchar *family_name)
-{
-    GHashTable *hash_table;
-    gsize length;
-    gint i;
-
-    g_autoptr(GError) error = NULL;
-
-    g_auto(GStrv) keys = g_key_file_get_keys (keyfile,
-                                              family_name,
-                                              &length,
-                                              &error);
-    if (keys == NULL) {
-        g_warning ("Error get keys: %s", error->message);
-        return NULL;
-    }
-    hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-
-    for (i = 0; i < length; i++) {
-        gchar *val;
-        val = g_key_file_get_value(keyfile, family_name, keys[i], NULL);
-        if (val != NULL) {
-            guint32 code;
-            code = g_ascii_strtoull (val, NULL, 16);
-            if (code != 0) {
-                g_hash_table_insert (hash_table, g_strdup(keys[i]), GUINT_TO_POINTER(code));
-            }
-        }
-    }
-    return hash_table;
-}
-
-static GHashTable* load_icon_code(GAwesome *ga)
-{
-    g_autoptr(GKeyFile) keyfile = key_file_from_resource ();
-
-    return hash_from_key_file (keyfile, ga->ft_face->family_name);
-}
-
 static void g_awesome_init (GAwesome *ga)
 {
     ga->icon_size = GTK_ICON_SIZE_BUTTON;
-    gdk_rgba_parse (ga->icon_rgba, "rgba(0,0,0,0)");
-    ga->icon_rgba_set = FALSE;
-    ga->font_face = load_icon_font(ga);
-    ga->hash_table = load_icon_code(ga);
     ga->font = NULL;
     ga->map = NULL;
+    gdk_rgba_parse (ga->icon_rgba, "rgba(0,0,0,0)");
+    ga->hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+    g_awesome_set_font (ga, "resource://cc/zhcn/gawesome/font.ttf");
+    g_awesome_set_code (ga, "resource://cc/zhcn/gawesome/font.map");
 }
 
 GAwesome* g_awesome_new (void)
@@ -232,9 +127,112 @@ GAwesome* g_awesome_new (void)
     return g_object_new (G_TYPE_AWESOME, NULL);
 }
 
-GAwesome* g_awesome_new_with_font (const gchar* font, const gchar *map)
+GAwesome* g_awesome_new_with_font (const gchar* font, const gchar *code)
 {
-    return g_object_new (G_TYPE_AWESOME, "font-path", font, "map-path", map, NULL);
+    return g_object_new (G_TYPE_AWESOME, "font-path", font, "map-path", code, NULL);
+}
+
+void g_awesome_set_font (GAwesome *ga, const gchar* font)
+{
+    FT_Error status;
+    gsize size;
+    g_autoptr(GFile) file = NULL;
+    g_autoptr(GError) error = NULL;
+    gconstpointer buffer;
+
+    /* init library */
+    if (ga->library == NULL) {
+        status = FT_Init_FreeType (&ga->library);
+        if (status != 0) {
+            g_warning ("Error %d opening library.\n", status);
+            return;
+        }
+    }
+
+    /* load ttf font */
+    file = g_file_new_for_commandline_arg (font);
+    if (ga->bytes != NULL) {
+        g_bytes_unref(ga->bytes);
+        ga->bytes = NULL;
+    }
+
+    ga->bytes = g_file_load_bytes (file, NULL, NULL, &error);
+    if (ga->bytes == NULL) {
+        g_warning ("Error load bytes from %s: %s\n", font, error->message);
+        return;
+    }
+
+    buffer = g_bytes_get_data (ga->bytes, &size);
+    if (buffer != NULL) {
+        status = FT_New_Memory_Face(ga->library,
+                                    buffer,
+                                    size,
+                                    0,
+                                    &ga->ft_face);
+        if (status != 0) {
+            g_warning ("Error %d opening fonts %s.\n", status, font);
+            return;
+        }
+        if (ga->font_face != NULL)
+            cairo_font_face_destroy (ga->font_face);
+        ga->font_face = cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
+    }
+}
+
+void g_awesome_set_code (GAwesome *ga, const gchar* code)
+{
+    g_autoptr(GFile) file = NULL;
+    g_autoptr(GError) error = NULL;
+    g_autoptr(GBytes) bytes = NULL;
+    g_autoptr(GKeyFile) keyfile = NULL;
+    gint i;
+    gsize length;
+
+    if (ga->ft_face == NULL) {
+        g_warning ("Please set font before set code\n");
+        return;
+    }
+
+    /* load code map */
+    file = g_file_new_for_commandline_arg (code);
+    bytes = g_file_load_bytes (file, NULL, NULL, &error);
+    if (bytes == NULL) {
+        g_warning ("Error load bytes from %s: %s\n", code, error->message);
+        return;
+    }
+
+    keyfile = g_key_file_new ();
+    if (!g_key_file_load_from_bytes (keyfile, bytes, G_KEY_FILE_NONE, &error)) {
+        if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
+            g_warning ("Error loading key file: %s", error->message);
+        }
+        return;
+    }
+
+    g_auto(GStrv) keys = g_key_file_get_keys (keyfile,
+                                              ga->ft_face->family_name,
+                                              &length,
+                                              &error);
+    if (keys == NULL) {
+        g_warning ("Error get keys: %s", error->message);
+        return;
+    }
+
+    if (ga->hash_table != NULL)
+        g_hash_table_destroy(ga->hash_table);
+    ga->hash_table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+    for (i = 0; i < length; i++) {
+        gchar *val;
+        val = g_key_file_get_value(keyfile, ga->ft_face->family_name, keys[i], NULL);
+        if (val != NULL) {
+            guint32 code;
+            code = g_ascii_strtoull (val, NULL, 16);
+            if (code != 0) {
+                g_hash_table_insert (ga->hash_table, g_strdup(keys[i]), GUINT_TO_POINTER(code));
+            }
+        }
+    }
 }
 
 void g_awesome_set_size (GAwesome *ga, GtkIconSize icon_size)
@@ -249,66 +247,12 @@ void g_awesome_set_rgba (GAwesome *ga, GdkRGBA *rgba)
 {
     if (ga->icon_rgba)
         gdk_rgba_free (ga->icon_rgba);
-    ga->icon_rgba = NULL;
-    if (rgba) {
-        if (!ga->icon_rgba_set) {
-            ga->icon_rgba_set = TRUE;
-            g_object_notify (G_OBJECT (ga), "icon-rgba");
-        }
+    if (rgba != NULL) {
         ga->icon_rgba = gdk_rgba_copy (rgba);
     } else {
-        if (ga->icon_rgba_set) {
-            ga->icon_rgba_set = FALSE;
-            g_object_notify (G_OBJECT (ga), "icon-rgba");
-        }
+        gdk_rgba_parse (ga->icon_rgba, "rgba(0,0,0,0)");
     }
-}
-
-static void g_awesome_set_font (GAwesome *ga, const gchar* font)
-{
-    FT_Error status;
-    gsize size;
-    g_autoptr(GError) error = NULL;
-    g_autofree gchar *buffer = NULL;
-
-    /* load ttf font */
-    if (g_file_get_contents (font, &buffer, &size, &error)) {
-        status = FT_New_Memory_Face(ga->library,
-                                    (const FT_Byte *)buffer,
-                                    size,
-                                    0,
-                                    &ga->ft_face);
-        if (status != 0) {
-            g_warning ("Error %d opening fonts %s.\n", status, font);
-            return;
-        }
-        if (ga->font_face != NULL)
-            cairo_font_face_destroy (ga->font_face);
-        ga->font_face = cairo_ft_font_face_create_for_ft_face (ga->ft_face, 0);
-    }
-}
-
-static void g_awesome_set_map (GAwesome *ga, const gchar* map)
-{
-    GHashTable *hash_table;
-
-    g_autoptr(GKeyFile) keyfile = g_key_file_new ();
-    g_autoptr(GError) error = NULL;
-
-    if (!g_key_file_load_from_file (keyfile, map, G_KEY_FILE_NONE, &error)) {
-        if (!g_error_matches (error, G_FILE_ERROR, G_FILE_ERROR_NOENT)) {
-            g_warning ("Error loading key file: %s", error->message);
-        }
-        return;
-    }
-
-    hash_table = hash_from_key_file (keyfile, ga->ft_face->family_name);
-
-    if (hash_table != NULL) {
-        if (ga->hash_table != NULL)
-            g_hash_table_destroy(ga->hash_table);
-        ga->hash_table = hash_table;
-    }
+    g_object_notify (G_OBJECT (ga), "icon-rgba");
 }
 
 static void g_awesome_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -329,7 +273,7 @@ static void g_awesome_set_property (GObject *object, guint prop_id, const GValue
             g_awesome_set_font (awesome, g_value_get_string (value));
             break;
         case PROP_MAP_PATH:
-            g_awesome_set_map (awesome, g_value_get_string (value));
+            g_awesome_set_code (awesome, g_value_get_string (value));
             break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -406,7 +350,9 @@ static GdkPixbuf* g_awesome_get_pixbuf_from_code (GAwesome *ga, gunichar code, g
 
     cairo_set_font_face (cr, ga->font_face);
     cairo_set_font_size (cr, size);
-    cairo_set_source_rgba (cr, rgba->red, rgba->green, rgba->blue, rgba->alpha);
+    if (rgba != NULL) {
+        cairo_set_source_rgba (cr, rgba->red, rgba->green, rgba->blue, rgba->alpha);
+    }
 
     g_unichar_to_utf8 (code, text);
     cairo_text_extents (cr, text, &extents);

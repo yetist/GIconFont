@@ -23,46 +23,80 @@
 #include <gtk/gtk.h>
 #include "gawesome.h"
 
-void hello (void)
+gboolean press_button (GtkWidget *widget, GdkEvent *event, const gchar* user_data)
 {
-	g_print ("Hello World\n");
+    g_print ("%s button pressed.\n", user_data);
+    return TRUE;
 }
 
-void destroy (void)
+GtkWidget* create_button (GAwesome* ga, const gchar *icon)
 {
-	gtk_main_quit ();
+    GtkWidget *image;
+    GtkWidget *button;
+
+    button = gtk_button_new_with_label(icon);
+    image = g_awesome_get_image (ga, icon);
+    gtk_button_set_image (GTK_BUTTON(button), image);
+    g_signal_connect (button, "button-press-event", G_CALLBACK (press_button), (gpointer) icon);
+    return button;
 }
 
-int main (int argc, char *argv[])
+static void activate (GtkApplication* app, gpointer user_data)
 {
-	GtkWidget *window;
-	GtkWidget *image;
-	GtkWidget *button;
-	GAwesome*  ga;
-	GdkRGBA rgba;
+    GtkWidget *window;
+    GtkWidget *box;
+    GtkWidget *button;
+    GAwesome*  ga;
+    GdkRGBA rgba;
 
-	gtk_init (&argc, &argv);
+    window = gtk_application_window_new (app);
+    gtk_window_set_title (GTK_WINDOW (window), "Test icon font");
+    g_signal_connect (window, "delete-event", G_CALLBACK (gtk_main_quit), NULL);
 
-	window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    button = gtk_button_new_with_label("确定");
+    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
 
-    rgba.red = 0.3;
-    rgba.green = 0.4;
-    rgba.blue = 0.5;
-    rgba.alpha = 1.0;
     ga = g_awesome_new();
+    gdk_rgba_parse (&rgba, "blue");
     g_awesome_set_rgba(ga, &rgba);
     g_awesome_set_size(ga, GTK_ICON_SIZE_DIALOG);
-	image = g_awesome_get_image (ga, "twitter");
-	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_fa_500px, &rgba, GTK_ICON_SIZE_DIALOG);
-	//image = g_awesome_get_image_from_code (ga, G_AWESOME_CODE_apple, &rgba, GTK_ICON_SIZE_DIALOG);
-	//image = g_awesome_get_image_at_size_rgba (ga, "apple", GTK_ICON_SIZE_DIALOG, &rgba);
-	image = g_awesome_get_image (ga, "apple");
-    gtk_button_set_image (GTK_BUTTON(button), image);
-	gtk_container_add (GTK_CONTAINER (window), button);
-	gtk_widget_show_all (window);
 
-	gtk_main ();
+    /* Test builtin icon font */
+    gchar* icons[]={
+        "twitter",
+        "apple",
+        "facebook",
+        NULL
+    };
 
-	return 0;
+    int i = 0 ;
+    while (icons[i] != NULL ) {
+        button = create_button (ga, icons[i]);
+        gtk_box_pack_start (GTK_BOX(box), button, FALSE, FALSE, 0);
+        i++;
+    }
+
+    /* Test font from uri or path */
+    g_awesome_set_font (ga, "https://at.alicdn.com/t/font_115436_p8ay96nf93g.ttf");
+    g_awesome_set_code (ga, "./example/code.map");
+    gdk_rgba_parse (&rgba, "red");
+    g_awesome_set_rgba(ga, &rgba);
+    g_awesome_set_size (ga, GTK_ICON_SIZE_MENU);
+    button = create_button (ga, "weibo");
+    gtk_box_pack_start (GTK_BOX(box), button, FALSE, FALSE, 0);
+
+    gtk_container_add (GTK_CONTAINER (window), box);
+    gtk_widget_show_all (window);
+}
+
+int main (int argc, char **argv)
+{
+    GtkApplication *app;
+    int status;
+
+    app = gtk_application_new ("org.gawesome.example", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+    status = g_application_run (G_APPLICATION (app), argc, argv);
+    g_object_unref (app);
+
+    return status;
 }
