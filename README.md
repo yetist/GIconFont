@@ -24,3 +24,7 @@ Use custom icon font:
     g_awesome_set_font (ga, "https://at.alicdn.com/t/font_115436_p8ay96nf93g.ttf");
     g_awesome_set_code (ga, "https://github.com/yetist/gawesome/raw/master/example/code.map");
 ```
+
+Snapshot for [example/main.c](./example/main.c)
+
+![](./example/snapshot.png)
