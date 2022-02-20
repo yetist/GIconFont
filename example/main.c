@@ -33,7 +33,7 @@ GtkWidget* create_button (GIconFont *font, const gchar *name)
     button = gtk_button_new_with_label(name);
     image = gicon_font_get_image (font, name);
     gtk_button_set_image (GTK_BUTTON(button), image);
-    g_signal_connect (button, "button-press-event", G_CALLBACK (press_button), (gpointer) font);
+    g_signal_connect (button, "button-press-event", G_CALLBACK (press_button), (gpointer) name);
     return button;
 }
 
