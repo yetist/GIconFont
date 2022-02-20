@@ -1,26 +1,30 @@
-source_h = [
-  'gicon-font.h',
+pub_source_h = [
+  'giconfont.h',
+]
+
+pub_source_c = [
+    'giconfont.c'
 ]
 
 install_headers(
-  source_h,
-  subdir: 'gicon-font',
+  pub_source_h,
+  subdir: 'giconfont',
 )
+
+source_c = pub_source_c
 
 if get_option('builtin_fonts')
   gnome = import('gnome')
   giconfont_resources = gnome.compile_resources(
-    'gicon-font-resource',
+    'giconfont-resource',
     'resource/giconfont.gresource.xml',
     source_dir: 'resource',
     c_name: 'gicon_font'
   )
-  source_c = ['gicon-font.c', giconfont_resources]
-else
-  source_c = ['gicon-font.c']
+  source_c += [giconfont_resources]
 endif
 
-libgicon_font = shared_library('gicon-font',
+libgicon_font = shared_library('giconfont-' + api_version,
   source_c,
   dependencies : [freetype_dep, gtk_dep],
   install:true,
@@ -35,18 +39,19 @@ libgicon_font_deps = declare_dependency(
 
 pkg = import('pkgconfig')
 pkg.generate(
-  name: 'gicon-font',
+  name: 'giconfont',
   version: meson.project_version(),
   description: 'Gobject icon font library',
-  filebase: 'gicon-font',
-  requires: ['freetype2', 'gtk+-3.0', 'gicon-font'],
-  libraries: '-lgicon-font',
-  subdirs: 'gicon-font',
+  filebase: 'giconfont-' + api_version,
+  #requires: ['freetype2', 'gtk+-3.0', 'giconfont'],
+  libraries: ['-lgiconfont-1.0'],
+  libraries_private: ['freetype2', 'gtk+-3.0'],
+  subdirs: 'giconfont',
 )
 
 if get_option('introspection')
   libgicon_font_gir = gnome.generate_gir(libgicon_font,
-    sources: [source_h, source_c],
+    sources: [pub_source_h, pub_source_c],
     nsversion : api_version,
     namespace : 'GIconFont',
     symbol_prefix : 'gicon',
@@ -56,10 +61,11 @@ if get_option('introspection')
     install : true,
     install_dir_gir: girdir,
     install_dir_typelib: typelibdir,
-    extra_args: [ '--c-include=gicon-font/gicon-font.h' ],
+    extra_args: [ '--c-include=giconfont/giconfont.h' ],
     )
+
   if get_option('vapi')
-    gicon_font_vapi = gnome.generate_vapi('gicon-font-' + api_version,
+    gicon_font_vapi = gnome.generate_vapi('giconfont-' + api_version,
       sources: libgicon_font_gir.get(0),
       packages: ['gtk+-3.0'],
       install: true,

@@ -1,4 +1,4 @@
-project('gicon-font', 'c',
+project('giconfont', ['c', 'vala'],
   version : '0.1.0',
   license : 'LGPLv2.1+',
   default_options : [
@@ -13,7 +13,7 @@ api_version = '1.0'
 # Compiler & Project arguments
 add_project_arguments([
   '-DHAVE_CONFIG_H',
-  '-I' + meson.build_root(),
+  '-I' + meson.current_build_dir(),
   ],
   language: 'c'
 )
@@ -22,7 +22,7 @@ freetype_dep = dependency('freetype2')
 gtk_dep = dependency('gtk+-3.0')
 
 top_srcdir = include_directories('.')
-top_libdir = include_directories('./gicon-font')
+top_libdir = include_directories('./giconfont')
 
 prefix = get_option('prefix')
 datadir = join_paths(prefix, get_option('datadir'))
@@ -57,7 +57,7 @@ else
   vapidir = join_paths(get_option('datadir'), 'vala', 'vapi')
 endif
 
-subdir('gicon-font')
+subdir('giconfont')
 subdir('example')
 if get_option('docs')
   subdir('docs')

@@ -28,3 +28,5 @@ Use custom icon font:
 Snapshot for [example/main.c](./example/main.c)
 
 ![](./example/snapshot.png)
+
+![](./example/browser.png)

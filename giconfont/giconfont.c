@@ -21,10 +21,10 @@
 #include <cairo-ft.h>
 #include <ft2build.h>
 #include "config.h"
-#include "gicon-font.h"
+#include "giconfont.h"
 
 #if BUILT_IN_FONTS
-#include "gicon-font-resource.h"
+#include "giconfont-resource.h"
 #endif
 
 enum {
@@ -125,8 +125,8 @@ static void gicon_font_init (GIconFont *font)
                                               g_free,
                                               NULL);
 #if BUILT_IN_FONTS
-    gicon_font_set_path (font, "resource://gicon-font/font.ttf");
-    gicon_font_set_map (font, "resource://gicon-font/font.map");
+    gicon_font_set_path (font, "resource://giconfont/font.ttf");
+    gicon_font_set_map (font, "resource://giconfont/font.map");
 #endif
 }
 
@@ -500,7 +500,7 @@ GdkPixbuf* gicon_font_get_pixbuf_with_size_rgba (GIconFont *font,
  *
  *
  *
- * Returns: (transfer full): the #GtkImage widget
+ * Returns: (transfer none): the #GtkImage widget
  **/
 GtkWidget* gicon_font_get_image (GIconFont *font, const gchar* name)
 {
@@ -515,7 +515,7 @@ GtkWidget* gicon_font_get_image (GIconFont *font, const gchar* name)
  *
  *
  *
- * Returns: (transfer full): the #GtkImage widget
+ * Returns: (transfer none): the #GtkImage widget
  **/
 GtkWidget* gicon_font_get_image_with_size (GIconFont *font, const gchar* name,
                                            GtkIconSize size)
@@ -531,7 +531,7 @@ GtkWidget* gicon_font_get_image_with_size (GIconFont *font, const gchar* name,
  * @rgba: 
  *
  *
- * Returns: (transfer full): the #GtkImage widget
+ * Returns: (transfer none): the #GtkImage widget
  **/
 GtkWidget* gicon_font_get_image_with_size_rgba (GIconFont *font, const gchar* name,
                                                 GtkIconSize size, GdkRGBA *rgba)

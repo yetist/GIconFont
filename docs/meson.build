@@ -9,11 +9,11 @@ glib_docpath = join_paths(glib_prefix, 'share', 'gtk-doc', 'html')
 docpath = join_paths(get_option('datadir'), 'gtk-doc', 'html')
 
 gnome.gtkdoc(
-	'gicon-font',
-	main_xml : 'gicon-font.xml',
+	'giconfont',
+	main_xml : 'giconfont.xml',
 	src_dir: [
-		join_paths(meson.source_root(), 'gicon-font'),
-		join_paths(meson.build_root(), 'gicon-font'),
+		join_paths(meson.source_root(), 'giconfont'),
+		join_paths(meson.build_root(), 'giconfont'),
 		],
 	dependencies: libgicon_font_deps,
 	gobject_typesfile: 'gicon-font.types',

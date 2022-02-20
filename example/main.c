@@ -17,7 +17,7 @@
  * */
 
 #include <gtk/gtk.h>
-#include <gicon-font.h>
+#include <giconfont.h>
 
 gboolean press_button (GtkWidget *widget, GdkEvent *event, const gchar* user_data)
 {
