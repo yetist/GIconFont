@@ -125,8 +125,8 @@ static void gicon_font_init (GIconFont *font)
                                               g_free,
                                               NULL);
 #if BUILT_IN_FONTS
-    gicon_font_set_path (font, "resource://giconfont/font.ttf");
-    gicon_font_set_map (font, "resource://giconfont/font.map");
+    gicon_font_set_path (font, "resource://gicon-font/font.ttf");
+    gicon_font_set_map (font, "resource://gicon-font/font.map");
 #endif
 }
 

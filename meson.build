@@ -18,7 +18,6 @@ add_project_arguments([
   language: 'c'
 )
 
-
 freetype_dep = dependency('freetype2')
 gtk_dep = dependency('gtk+-3.0')
 
@@ -38,8 +37,7 @@ conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
 conf.set_quoted('DATADIR', pkgdatadir)
 
-builtin_fonts = get_option('builtin_fonts')
-if builtin_fonts
+if get_option('builtin_fonts')
   conf.set('BUILT_IN_FONTS', 1)
 endif
 
@@ -61,15 +59,6 @@ endif
 
 subdir('gicon-font')
 subdir('example')
-subdir('docs')
-
-pkg = import('pkgconfig')
-pkg.generate(
-	name: 'gicon-font',
-	version: meson.project_version(),
-	description: 'Gobject icon font library',
-	filebase: 'gicon-font',
-	requires: ['gobject-2.0', 'giconfont'],
-	libraries: '-lgicon-font',
-	subdirs: 'gicon-font',
-)
+if get_option('docs')
+  subdir('docs')
+endif

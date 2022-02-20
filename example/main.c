@@ -72,7 +72,7 @@ static void activate (GtkApplication* app, gpointer user_data)
 
     /* Test font from uri or path */
     gicon_font_set_path (font, "https://at.alicdn.com/t/font_115436_p8ay96nf93g.ttf");
-    gicon_font_set_map (font, "https://github.com/yetist/gawesome/raw/master/example/code.map");
+    gicon_font_set_map (font, "https://github.com/yetist/gicon-font/raw/master/example/code.map");
     gdk_rgba_parse (&rgba, "red");
     gicon_font_set_rgba(font, &rgba);
     gicon_font_set_size (font, GTK_ICON_SIZE_MENU);
