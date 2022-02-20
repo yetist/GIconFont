@@ -7,7 +7,7 @@ foreach src : all_sources
   exe = executable(p[0],
     sources: src,
     dependencies : [freetype_dep, gtk_dep],
-    link_with : [libgawesome],
+    link_with : [libgicon_font],
     include_directories : [
       top_srcdir,
       top_libdir,
