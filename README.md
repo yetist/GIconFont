@@ -4,7 +4,6 @@ GIconFont support to use icon font like FontAwesome for Gtk3 applications.
 
 # Example
 
-
 Use builtin icon font:
 
 ```
@@ -25,8 +24,10 @@ Use custom icon font:
     gicon_font_set_map (font, "https://github.com/yetist/giconfont/raw/master/example/code.map");
 ```
 
-Snapshot for [example/main.c](./example/main.c)
+Screenshot for [example/main.c](./example/main.c)
 
 ![](./example/snapshot.png)
+
+Screenshot for [example/browser.vala](./example/browser.vala)
 
 ![](./example/browser.png)
