@@ -5,7 +5,7 @@ project('giconfont', ['c', 'vala'],
       'warning_level=1',
       'buildtype=debugoptimized',
       ],
-  meson_version : '>=0.40.1'
+  meson_version : '>=0.56.0'
 )
 
 api_version = '1.0'

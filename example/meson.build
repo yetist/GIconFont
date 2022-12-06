@@ -11,6 +11,7 @@ exe = executable('browser',
   top_srcdir,
   top_libdir,
   ],
+  vala_args: ['--pkg=giconfont-' + api_version, '--vapidir=' + meson.project_source_root() + '/giconfont'],
   install : false,
 )
 
